@@ -74,6 +74,16 @@ def clean_gpg_keys():
         pass
 
 
+def add_private_gpg():
+    cmd = ('gpg --import %s' % GPG_PRIVATE_PATH).split()
+    subprocess.call(cmd, stdout=DEV_NULL, stderr=DEV_NULL)
+
+
+def add_public_gpg():
+    cmd = ('gpg --import %s' % GPG_PUBLIC_PATH).split()
+    subprocess.call(cmd, stdout=DEV_NULL, stderr=DEV_NULL)
+
+
 def skip_py3(testcase, reason="Not in Python 3"):
     """Decorator for skip Python 3 tests."""
     if six.PY3:
