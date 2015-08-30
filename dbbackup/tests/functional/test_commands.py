@@ -1,12 +1,13 @@
 import os
 import subprocess
-from io import BytesIO
 from mock import patch
+
 from django.test import TestCase
 from django.core.management import execute_from_command_line
+from django.utils.six import BytesIO
+
 from dbbackup.tests.utils import TEST_DATABASE, HANDLED_FILES, clean_gpg_keys
 from dbbackup.tests.utils import GPG_PUBLIC_PATH, DEV_NULL
-
 from dbbackup.utils import six
 
 
@@ -48,11 +49,9 @@ class DbBackupCommandTest(TestCase):
 # TODO: Add fake database to restore
 @patch('django.conf.settings.DATABASES', {'default': TEST_DATABASE})
 @patch('dbbackup.settings.STORAGE', 'dbbackup.tests.utils')
-@patch('dbbackup.management.commands.dbrestore.input', return_value='y')
+@patch('dbbackup.management.commands.dbrestore.Command.ask_yes_or_no', return_value=True)
 class DbRestoreCommandTest(TestCase):
     def setUp(self):
-        if six.PY3:
-            self.skipTest("Compression isn't implemented in Python3")
         HANDLED_FILES.clean()
         cmd = ('gpg --import %s' % GPG_PUBLIC_PATH).split()
         subprocess.call(cmd, stdout=DEV_NULL, stderr=DEV_NULL)
@@ -68,12 +67,12 @@ class DbRestoreCommandTest(TestCase):
         # Restore
         execute_from_command_line(['', 'dbrestore'])
 
-    # @patch('dbbackup.utils.getpass', return_value=None)
-    # def test_encrypted(self, *args):
-    #     # Create backup
-    #     execute_from_command_line(['', 'dbbackup', '--encrypt'])
-    #     # Restore
-    #     execute_from_command_line(['', 'dbrestore', '--decrypt'])
+    @patch('dbbackup.utils.getpass', return_value=None)
+    def test_encrypted(self, *args):
+        # Create backup
+        execute_from_command_line(['', 'dbbackup', '--encrypt'])
+        # Restore
+        execute_from_command_line(['', 'dbrestore', '--decrypt'])
 
     def test_compressed(self, *args):
         # Create backup

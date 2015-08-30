@@ -10,15 +10,12 @@ from optparse import make_option
 
 from django.conf import settings
 from django.core.management.base import CommandError
-from django.utils import six
 from django.db import connection
 
 from ._base import BaseDbBackupCommand
 from ... import utils
 from ...dbcommands import DBCommands
 from ...storage.base import BaseStorage, StorageError
-
-input = raw_input if six.PY2 else input  # @ReservedAssignment
 
 
 class Command(BaseDbBackupCommand):
@@ -95,11 +92,10 @@ class Command(BaseDbBackupCommand):
             inputfile.close()
             inputfile = uncompressed_file
         self.log("  Restore tempfile created: %s" % utils.handle_size(inputfile), 1)
-        if self.interactive:
-            answer = input("Are you sure you want to continue? [Y/n]")
-            if answer.lower() not in ('y', 'yes', ''):
-                self.log("Quitting", 1)
-                sys.exit(0)
+        prompt = "Are you sure you want to restore ? [Y/n]"
+        if not self.ask_yes_or_no(prompt, not self.interactive):
+            self.log("Quitting", 1)
+            sys.exit(0)
         inputfile.seek(0)
         self.dbcommands.run_restore_commands(inputfile)
 
