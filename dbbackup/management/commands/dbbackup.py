@@ -29,6 +29,8 @@ class Command(BaseDbBackupCommand):
         make_option("-s", "--servername", help="Specify server name to include in backup filename"),
         make_option("-z", "--compress", help="Compress the backup files", action="store_true", default=False),
         make_option("-e", "--encrypt", help="Encrypt the backup files", action="store_true", default=False),
+        make_option("-o", "--output-filename", help="Specify filename on storage", default=None),
+        make_option("-O", "--output-path", help="Specify where to store on local filesystem", default=None),
     )
 
     @utils.email_uncaught_exception
@@ -42,6 +44,8 @@ class Command(BaseDbBackupCommand):
         self.servername = options.get('servername')
         self.compress = options.get('compress')
         self.encrypt = options.get('encrypt')
+        self.filename = options.get('output_filename')
+        self.path = options.get('output_path')
         self.storage = BaseStorage.storage_factory()
         database_keys = (self.database,) if self.database else dbbackup_settings.DATABASES
         for database_key in database_keys:
@@ -74,11 +78,18 @@ class Command(BaseDbBackupCommand):
         if self.encrypt:
             encrypted_file, filename = utils.encrypt_file(outputfile, filename)
             outputfile = encrypted_file
+        filename = self.filename if self.filename else filename
         if not self.quiet:
             self.logger.info("Backup tempfile created: %s", utils.handle_size(outputfile))
-            self.logger.info("Writing file to %s: %s, filename: %s", self.storage.name, self.storage.backup_dir,
+        # Store backup
+        if self.path is None:
+            self.logger.info("Writing file to %s: %s, filename: %s",
+                             self.storage.name, self.storage.backup_dir,
                              filename)
-        self.storage.write_file(outputfile, filename)
+            self.storage.write_file(outputfile, filename)
+        else:
+            self.logger.info("Writing file to %s", filename)
+            self.write_local_file(outputfile, self.path)
 
     def cleanup_old_backups(self, database):
         """
@@ -96,3 +107,11 @@ class Command(BaseDbBackupCommand):
                 if not self.quiet:
                     self.logger.info("Deleting: %s", filepath)
                 self.storage.delete_file(filepath)
+
+    def write_local_file(self, outputfile, path):
+        """
+        Write file to the desired path.
+        """
+        with open(path, 'w') as fd:
+            for chunk in outputfile:
+                fd.write(chunk)
