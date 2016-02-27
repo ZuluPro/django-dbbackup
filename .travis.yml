@@ -23,6 +23,7 @@ install:
 
 script:
   - tox -e $TOX_ENV
+  - tox -e $TOX_ENV -- bash tests/functional.sh
 
 after_success:
   - tox -e $TOX_ENV -- coveralls $COVERALLS_OPTION
