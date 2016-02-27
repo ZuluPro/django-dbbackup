@@ -185,11 +185,11 @@ def unencrypt_file(inputfile, filename, passphrase=None):
                 raise DecryptionError('Decryption failed; status: %s' % result.status)
             outputfile = tempfile.SpooledTemporaryFile(
                 max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
-            f = open(temp_filename, 'r+b')
+            uncompress_file = open(temp_filename, 'r+b')
             try:
-                outputfile.write(f.read())
+                copyfileobj(uncompress_file, outputfile, settings.TMP_FILE_READ_SIZE)
             finally:
-                f.close()
+                uncompress_file.close()
         finally:
             if os.path.exists(temp_filename):
                 os.remove(temp_filename)
@@ -215,7 +215,6 @@ def compress_file(inputfile, filename):
         max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
     new_filename = filename + '.gz'
     zipfile = gzip.GzipFile(filename=filename, fileobj=outputfile, mode="wb")
-    # TODO: Why do we have an exception block without handling exceptions?
     try:
         inputfile.seek(0)
         copyfileobj(inputfile, zipfile, settings.TMP_FILE_READ_SIZE)
@@ -242,7 +241,7 @@ def uncompress_file(inputfile, filename):
     zipfile = gzip.GzipFile(fileobj=inputfile, mode="rb")
     try:
         inputfile.seek(0)
-        outputfile.write(zipfile.read())
+        copyfileobj(zipfile, outputfile, settings.TMP_FILE_WRITE_SIZE)
     finally:
         zipfile.close()
     new_basename = os.path.basename(filename).replace('.gz', '')

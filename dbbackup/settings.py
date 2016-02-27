@@ -16,7 +16,8 @@ HOSTNAME = getattr(settings, 'DBBACKUP_HOSTNAME', socket.gethostname())
 # Directory to use for temporary files
 TMP_DIR = getattr(settings, 'DBBACKUP_TMP_DIR', tempfile.gettempdir())
 TMP_FILE_MAX_SIZE = getattr(settings, 'DBBACKUP_TMP_FILE_MAX_SIZE', 10*1024*1024)
-TMP_FILE_READ_SIZE = getattr(settings, 'DBBACKUP_TMP_FILE_READ_SIZE', 1024*1000)
+TMP_FILE_READ_SIZE = getattr(settings, 'DBBACKUP_TMP_FILE_READ_SIZE', 2**17)
+TMP_FILE_WRITE_SIZE = getattr(settings, 'DBBACKUP_TMP_FILE_WRITE_SIZE', 2**16)
 
 # Days to keep
 CLEANUP_KEEP = getattr(settings, 'DBBACKUP_CLEANUP_KEEP', 10)

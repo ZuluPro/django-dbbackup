@@ -70,9 +70,11 @@ class Command(BaseDbBackupCommand):
         self.dbcommands.run_backup_commands(outputfile)
         if self.compress:
             compressed_file, filename = utils.compress_file(outputfile, filename)
+            outputfile.close()
             outputfile = compressed_file
         if self.encrypt:
             encrypted_file, filename = utils.encrypt_file(outputfile, filename)
+            outputfile.close()
             outputfile = encrypted_file
         if not self.quiet:
             self.logger.info("Backup tempfile created: %s", utils.handle_size(outputfile))
