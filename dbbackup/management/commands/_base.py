@@ -95,8 +95,13 @@ class BaseDbBackupCommand(BaseCommand):
         """Write file to the desired path."""
         self.logger.info("Writing file to %s", path)
         outputfile.seek(0)
-        with open(path, 'wb') as fd:
-            copyfileobj(outputfile, fd)
+        try:
+            with open(path, 'w') as fd:
+                copyfileobj(outputfile, fd)
+        except TypeError:
+            outputfile.seek(0)
+            with open(path, 'wb') as fd:
+                copyfileobj(outputfile, fd)
 
     def _get_backup_file(self, database=None, servername=None):
         if self.path:

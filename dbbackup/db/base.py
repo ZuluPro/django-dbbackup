@@ -113,6 +113,12 @@ class BaseCommandDBConnector(BaseDBConnector):
     dump_env = {}
     restore_env = {}
 
+    def _pre_dump_hook(self, stdout, stderr, env):
+        pass
+
+    def _post_dump_hook(self, stdout, stderr, env):
+        pass
+
     def run_command(self, command, stdin=None, env=None):
         """
         Launch a shell command line.
@@ -134,6 +140,7 @@ class BaseCommandDBConnector(BaseDBConnector):
         full_env = os.environ.copy() if self.use_parent_env else {}
         full_env.update(self.env)
         full_env.update(env or {})
+        self._pre_dump_hook(stdout, stderr, full_env)
         try:
             process = Popen(cmd, stdin=stdin, stdout=stdout, stderr=stderr,
                             env=full_env)
@@ -142,9 +149,10 @@ class BaseCommandDBConnector(BaseDBConnector):
                 stderr.seek(0)
                 raise exceptions.CommandConnectorError(
                     "Error running: {}\n{}".format(command, stderr.read()))
-            stdout.seek(0)
-            stderr.seek(0)
-            return stdout, stderr
         except OSError as err:
             raise exceptions.CommandConnectorError(
                 "Error running: {}\n{}".format(command, str(err)))
+        self._post_dump_hook(stdout, stderr, full_env)
+        stdout.seek(0)
+        stderr.seek(0)
+        return stdout, stderr

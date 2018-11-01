@@ -9,6 +9,15 @@ class MysqlDumpConnector(BaseCommandDBConnector):
     """
     dump_cmd = 'mysqldump'
     restore_cmd = 'mysql'
+    disable_foreign_check_error = True
+
+    def _pre_dump_hook(self, stdout, stderr, env):
+        if self.disable_foreign_check_error:
+            stdout.write(b'SET FOREIGN_KEY_CHECKS=0;\n')
+
+    def _post_dump_hook(self, stdout, stderr, env):
+        if self.disable_foreign_check_error:
+            stdout.write(b'SET FOREIGN_KEY_CHECKS=1;\n')
 
     def _create_dump(self):
         cmd = '{} {} --quick'.format(self.dump_cmd, self.settings['NAME'])
